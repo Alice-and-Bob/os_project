@@ -1,13 +1,19 @@
+# 4、线程管理
+# 本虚拟系统以线程为基本运行单位，线程本身采用编程语言提供的线程机制，不模拟。系统主要包括的线程有：
+# DONE:（1）数据生成线程：该线程负责生成外存数据，给定数据大小（按字节计算）、数据信息（英文字母）、存储目录、文件名后，该线程调用磁盘管理中空闲磁盘管理功能，申请所需大小的外存块，如果盘块不够给出提示。按照要求的数据组织方式，将数据存入磁盘块（按块分配磁盘），并调用目录管理功能为其在目录中建立目录项，更改空闲盘块信息。
+# DONE:（2）删除数据线程：该线程调用删除目录管理中文件删除功能删除数据（内存中文件不能删除）。并回收外存空间，更新空闲盘块信息。
+# DONE:（3）执行线程：选择目录中的文件，执行线程将文件数据从外存调入内存，为此，首先需要调用内存管理的空闲空间管理功能，为该进程申请4块空闲内存，如果没有足够内存则给出提示，然后根据目录中文件存储信息将文件数据从外存读入内存，此间如果4块内存不够存放文件信息，需要进行换页（选择的换页策略见分组要求），欢出的页面存放到磁盘兑换区。允许同时运行多个执行线程。文件数据在内存块的分布通过线程的页表（模拟）进行记录。
+# DONE:（4）线程互斥：对于64B的内存，线程需要互斥访问，避免产生死锁。不能访问内存的线程阻塞，等待被唤醒。
+
 import threading
 import disk
 import dir
 import ram
 
 
-# DONE：在根据文件名从FCB中查找时，没有考虑到文件重名的冲突；
-# DONE：考虑在所有涉及FCB查找的代码中添加对文件路径的判断；只有文件路径和文件名全部一致时，才允许访问对应FCB
-
-# TODO:所有调用ram模块里方法的代码都在临界区，要先获取锁才能调用ram模块方法
+# FIXED：在根据文件名从FCB中查找时，没有考虑到文件重名的冲突；
+# FIXED：考虑在所有涉及FCB查找的代码中添加对文件路径的判断；只有文件路径和文件名全部一致时，才允许访问对应FCB
+# FIXED:所有调用ram模块里方法的代码都在临界区，要先获取锁才能调用ram模块方法
 
 # 数据生成线程
 def data_generator(data_size_i, data_content_i, file_dir_i, filename_i):
@@ -30,12 +36,15 @@ def data_generator(data_size_i, data_content_i, file_dir_i, filename_i):
         if free_list is -1:
             # 没有足够空闲空间
             raise BufferError
-        else:
-            # 正常执行
+        else:  # 正常执行
+            # 写FCB块
             for item in dir.FCB:
                 if item.is_occupied is 0:  # 第一个未被占用的FCB块
                     item.occupy(is_occupied=1, filename=filename, file_dir=file_dir, start_point=disk.FAT[0])
                     break
+
+            # 写目录文件
+            dir.file_to_dir(filename=filename, file_dir=file_dir)
 
             # 按偏移量写文件到disk.image
             with open("disk.image", mode="ab+", encoding='utf-8') as disk_image:
@@ -53,6 +62,7 @@ def data_generator(data_size_i, data_content_i, file_dir_i, filename_i):
                     i = i + 1
 
             # FIXME: 数组下标可能错误
+            # 更新FAT表
             for i in range(0, len(free_list)):
                 disk.FAT[free_list[i]] = free_list[i + 1]
             disk.FAT[1 + len(free_list)] = -2  # 文件末尾
@@ -78,7 +88,7 @@ def data_delete(file_dir_i, filename_i):
 
     # DONE：调用目录管理文件删除
     try:
-        if_done = dir.delete(filename=filename, file_dir=file_dir)
+        if_done = dir.delete_file(filename=filename, file_dir=file_dir)
         if if_done is -1:  # 文件未找到
             raise FileNotFoundError
         elif if_done is 0:  # 文件已在内存
@@ -121,6 +131,7 @@ def data_delete(file_dir_i, filename_i):
     return 1
 
 
+# TODO：考虑执行线程类的实例化和并发调用执行
 class ExecThread(threading.Thread):
     def __init__(self, file_dir_i, filename_i):
         """
@@ -137,9 +148,11 @@ class ExecThread(threading.Thread):
             item = -1
             self.page_table.append(item)
 
-    # 执行线程
     def run(self):
-
+        """
+        主要的执行线程，执行从磁盘掉数据进入内存的功能，可以并发执行；
+        :return:
+        """
         # ----------------进入临界区---------------
         # 申请4块内存
         with ram.lock.acquire():
@@ -174,8 +187,18 @@ class ExecThread(threading.Thread):
             disk_image.seek(point * 4)
             disk_image.read(n=4)
 
-        # ------------------进入临界区---------------------
+        # ---------------------进入临界区----------------------
         # 将数据调入内存块内
         with ram.lock.acquire():
             ram.data_to_ram(data=data, free_block=free_block)
-        # ------------------退出临界区---------------------
+        # ---------------------退出临界区----------------------
+
+    def delete(self):
+        """
+        当线程结束时调用该方法，用于向ram模块传递释放占用内存的所需信息
+        :return: NULL
+        """
+        # -------------进入临界区-------------
+        with ram.lock.acquire():
+            ram.recycle_ram(self.page_table)
+        # -------------退出临界区-------------

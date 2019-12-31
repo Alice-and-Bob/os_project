@@ -6,3 +6,6 @@
 5. main.py 主程序
 6. disk.image 模拟磁盘文件
 7. TODO.txt 课设要求
+
+> 如果不是没人陪伴，谁愿意在新年夜写代码呢？
+![l3v6Zd.jpg](https://s2.ax1x.com/2019/12/31/l3v6Zd.jpg)
