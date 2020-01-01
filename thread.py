@@ -115,6 +115,7 @@ def data_delete(file_dir_i, filename_i):
     # DONE：回收磁盘空间,初始化数据到disk.image
     # 按偏移量写文件到disk.image
     with open("disk.image", mode="ab+", encoding='utf-8') as disk_image:
+        back_blocks = 0
         while disk.FAT[point] is not -2:
             # 写空白数据
             disk_image.seek(point * 4)
@@ -123,6 +124,7 @@ def data_delete(file_dir_i, filename_i):
             temp = point
             point = disk.FAT[point]
             disk.FAT[temp] = -1
+            # 占用的块数
         # 初始化文件尾
         disk.FAT[point] = -1
         disk_image.seek(point * 4)
@@ -131,7 +133,31 @@ def data_delete(file_dir_i, filename_i):
     return 1
 
 
-# TODO：考虑执行线程类的实例化和并发调用执行
+def thread_start():
+    """
+    本模块开始的函数，调用该函数将执行多线程并发的执行线程功能
+    :return:NULL
+    """
+    n = int(input("输入要调入文件个数"))
+    filenames = []
+    file_dirs = []
+    for i in range(0, n):
+        filename = input("输入第" + str(n + 1) + "个文件名")
+        filenames.append(filename)
+        file_dir = input("输入第" + str(n + 1) + "个文件目录")
+        file_dirs.append(file_dir)
+
+    thread_list = []  # 建立n线程的线程队列
+    for i in range(0, n):
+        thread_item = ExecThread(filename_i=filenames[i], file_dir_i=file_dirs[i])
+        thread_list.append(thread_item)
+
+    for item in thread_list:
+        item.join()
+        item.start()
+
+
+# DONE：考虑执行线程类的实例化和并发调用执行
 class ExecThread(threading.Thread):
     def __init__(self, file_dir_i, filename_i):
         """
@@ -191,14 +217,6 @@ class ExecThread(threading.Thread):
         # 将数据调入内存块内
         with ram.lock.acquire():
             ram.data_to_ram(data=data, free_block=free_block)
-        # ---------------------退出临界区----------------------
-
-    def delete(self):
-        """
-        当线程结束时调用该方法，用于向ram模块传递释放占用内存的所需信息
-        :return: NULL
-        """
-        # -------------进入临界区-------------
-        with ram.lock.acquire():
+            ram.display_ram()
             ram.recycle_ram(self.page_table)
-        # -------------退出临界区-------------
+        # ---------------------退出临界区----------------------

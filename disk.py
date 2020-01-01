@@ -6,7 +6,7 @@
 # DONE:（3）兑换区管理：能够写入、读出兑换区数据。
 
 
-free_blocks = 1024  # int型变量，用于指出当前磁盘上共有多少块空闲，初始应为1024块
+number_of_free_blocks = 1024  # int型变量，用于指出当前磁盘上共有多少块空闲，初始应为1024块
 swapping_start = 900  # int型变量，用于标明对换区起始盘块号
 
 # 初始化一个虚拟磁盘，写1024*4字节
@@ -32,7 +32,11 @@ def swapping_area_write(point, data):
     :param point:写指针
     :return:NULL
     """
-    pass
+    if point < 900:
+        print("要写入的盘块不属于对换区，将会影响文件内容")
+    with open("disk.image", "wb+") as disk_image:
+        disk_image.seek(4 * point)
+        disk_image.write(data)
 
 
 def swapping_area_read(point):
@@ -41,7 +45,12 @@ def swapping_area_read(point):
     :param point:读指针
     :return: bytes(data)，根据指针读出的字节型的4B
     """
-    pass
+    if point < 900:
+        print("要读出的盘块不属于对换区，将会影响内存")
+    with open("disk.image", "rb+") as disk_image:
+        disk_image.seek(4 * point)
+        data = disk_image.read(n=4)
+    return data
 
 
 def malloc_free_blocks(block_number):
@@ -50,7 +59,11 @@ def malloc_free_blocks(block_number):
     :param block_number: 调用者想要得到的空闲块的数量，范围应在[1,free_blocks]之内
     :return: 返回一个list，内容是一列范围在[0,1023]的数字，即块号；若没有足够空闲块分配，则返回-1表示无空闲空间
     """
-    pass
+    free_block_list = free_block_manage()
+    if block_number > number_of_free_blocks:  # 没有足够的空闲块
+        return -1
+    else:
+        return free_block_list[0:block_number]
 
 
 def free_block_manage():
@@ -58,3 +71,9 @@ def free_block_manage():
     用于管理当前磁盘上空闲的块，可以查询并返回当前的空闲块块号
     :return: list(free_blocks)；块号序列
     """
+    free_block_list = []
+    for ii in range(0, 1024):
+        if FAT[ii] is -1:  # 在初始化状态未用
+            free_block_list.append(ii)
+    number_of_free_blocks = len(free_block_list)
+    return free_block_list

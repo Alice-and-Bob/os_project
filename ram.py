@@ -45,6 +45,7 @@ def malloc_free_block():
     pass
 
 
+# 回收线程内存
 def recycle_ram(used_chunk):
     """
     线程结束时调用该方法，传入线程此时占用的内存块的块号，由此方法进行释放和初始化
@@ -53,6 +54,7 @@ def recycle_ram(used_chunk):
     """
 
 
+# 内存块置换
 def global_fifo():
     """
     采用全局可变分配，若线程提出多于四个内存块的请求，则首先挑选足够的空闲块分配给进程；当空闲块全部分配完毕，则启用全局FIFO置换策略，
@@ -63,6 +65,7 @@ def global_fifo():
     pass
 
 
+# 数据调入
 def data_to_ram(data, free_block):
     """
     用于把执行线程的数据调入预先分配的4个内存块内，同时要维护块管理表；若数据多于4块，则启用块置换算法，选择某一块调入对换区内
@@ -71,3 +74,9 @@ def data_to_ram(data, free_block):
     :return: NULL
     """
     pass
+
+
+# 内存目前状态显示
+def display_ram():
+    for ram_chunk in ram:
+        print(ram_chunk)

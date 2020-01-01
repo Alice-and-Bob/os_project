@@ -6,6 +6,8 @@
 # DONE:（3）为文件建立目录项：一个文件被创建后，为该文件创建目录项，并将文件相关信息写入目录中。
 # DONE:（4）删除文件：删除目录中某个文件，删除其在磁盘中的数据，并删除目录项。如果被删除文件已经读入内存应该阻止删除，完成基本的文件保护。
 
+import disk
+
 
 class FcbBlock:
     """
@@ -14,12 +16,13 @@ class FcbBlock:
     filename = ""  # 文件名
     file_dir = ""  # 文件路径
     start_point = -1  # 文件第一个起始块的物理块号
-
+    # file_size = 0  # 文件大小，以字节为计
     is_occupied = 0  # 标明本FCB是否被占用；默认为0未被占用
 
-    def occupy(self, filename, file_dir, start_point, is_occupied):
+    def occupy(self, filename, file_dir, start_point, file_size, is_occupied):
         """
         在要占用一个FCB时进行初始化
+        :param file_size:
         :param filename:
         :param file_dir:
         :param start_point:
@@ -29,7 +32,10 @@ class FcbBlock:
         self.filename = filename
         self.file_dir = file_dir
         self.start_point = start_point
+        # self.file_size = file_size
         self.is_occupied = is_occupied
+
+        # disk.number_of_free_blocks -= 1 + file_size // 4  # 目前的空闲块数减去要占用的块数
 
     def delete(self):
         """
@@ -39,6 +45,7 @@ class FcbBlock:
         self.filename = ""  # 文件名
         self.file_dir = ""  # 文件路径
         self.start_point = -1  # 文件第一个起始块的物理块号
+        # self.file_size = 0  # 文件大小，以字节为计
         self.is_occupied = 0  # 标明本FCB是否被占用；默认为0未被占用
 
 
@@ -49,7 +56,7 @@ for i in range(0, 1024):
     FCB.append(a)
 
 # 二级文件目录
-dir = []
+dir = {}
 
 
 def new_dir(dir_name):
@@ -59,7 +66,7 @@ def new_dir(dir_name):
     :return: NULL
     """
     # dir_item = {'dir_name': ["filename1", "filename2", "filename3"]}
-    pass
+    dir[str(dir_name)] = []
 
 
 def delete_dir(dir_name):
@@ -68,7 +75,14 @@ def delete_dir(dir_name):
     :param dir_name: 要删除的空目录名；str
     :return: NULL
     """
-    pass
+    if dir[dir_name] is []:
+        dir.pop(dir_name)
+    else:
+        flag = input("要删除的目录非空，继续？y/n")
+        if flag is ('y' or 'Y'):
+            dir.pop(dir_name)
+        else:
+            print("取消删除操作")
 
 
 def file_to_dir(filename, file_dir):
@@ -78,15 +92,28 @@ def file_to_dir(filename, file_dir):
     :param file_dir:
     :return:NULL
     """
-    pass
+    try:
+        dir[file_dir].append(filename)
+    except KeyError:
+        print("没有该文件目录，将自动创建目录")
+        dir[file_dir] = [filename]
 
 
 def delete_file(filename, file_dir):
     """
     删除功能，用于删除数据；根据FCB表的状态判断某文件是否在内存中，若在内存则拒绝删除操作否则根据文件名删除文件并做好提示
-    :param filename: 
+    :param file_dir:
+    :param filename:
     :return:可以安全删除：1
             因为在内存中而不可以删除：0
             因为未找到文件名对应的文件而无法删除：-1
     """
-    pass
+    for fcb_item in FCB:
+        if (fcb_item.filename is filename) and (fcb_item.file_dir is file_dir):  # 目标路径下的文件存在
+            if fcb_item.is_occupied:  # 在内存
+                # print("要删除的文件在内存中")
+                return 0
+            else:  # 存在且不在内存
+                return 1
+        else:
+            return -1
