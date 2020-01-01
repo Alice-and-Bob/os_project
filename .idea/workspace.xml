@@ -2,12 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f51f6028-e8f1-47b1-85f7-008498b9fbee" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dir.py" beforeDir="false" afterPath="$PROJECT_DIR$/dir.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/disk.py" beforeDir="false" afterPath="$PROJECT_DIR$/disk.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ram.py" beforeDir="false" afterPath="$PROJECT_DIR$/ram.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/thread.py" beforeDir="false" afterPath="$PROJECT_DIR$/thread.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
