@@ -10,7 +10,7 @@ number_of_free_blocks = 1024  # int型变量，用于指出当前磁盘上共有
 swapping_start = 900  # int型变量，用于标明对换区起始盘块号
 
 # 初始化一个虚拟磁盘，写1024*4字节
-Disk = open("disk.image", mode='ab')
+Disk = open("disk.image", mode='rb')
 for i in range(0, 1024 * 4):
     Disk.write(b'\x00')
 

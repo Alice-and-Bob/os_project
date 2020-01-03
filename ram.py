@@ -20,11 +20,11 @@ for i in range(0, 16):  # RAM共计16块，16*4字节
 
 # 内存管理表
 ram_manage = []
-block = {'time': 0,  # 进入内存的时间
-         'is_free': 1  # 是否空闲
-         }
+item = {'time': 0,  # 进入内存的时间
+        'is_free': 1  # 是否空闲
+        }
 for i in range(0, 16):
-    ram_manage.append(block)
+    ram_manage.append(item)
 
 # FIXME：在内存块被换出时通过调用线程的对换方法换出，以便于通知线程更改页表；
 # FIXED：对内存读写加锁，访问ram都要申请锁，在同一时间线上只允许一个线程进行内存读或写的操作

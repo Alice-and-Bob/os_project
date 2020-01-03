@@ -16,13 +16,12 @@ class FcbBlock:
     filename = ""  # 文件名
     file_dir = ""  # 文件路径
     start_point = -1  # 文件第一个起始块的物理块号
-    # file_size = 0  # 文件大小，以字节为计
+    is_in_ram = 0  # 标明本文件是否已经调入内存；默认为0未调入
     is_occupied = 0  # 标明本FCB是否被占用；默认为0未被占用
 
-    def occupy(self, filename, file_dir, start_point, file_size, is_occupied):
+    def occupy(self, filename, file_dir, start_point, is_occupied):
         """
         在要占用一个FCB时进行初始化
-        :param file_size:
         :param filename:
         :param file_dir:
         :param start_point:
@@ -32,7 +31,7 @@ class FcbBlock:
         self.filename = filename
         self.file_dir = file_dir
         self.start_point = start_point
-        # self.file_size = file_size
+        self.is_in_ram = 0
         self.is_occupied = is_occupied
 
         # disk.number_of_free_blocks -= 1 + file_size // 4  # 目前的空闲块数减去要占用的块数
@@ -45,7 +44,7 @@ class FcbBlock:
         self.filename = ""  # 文件名
         self.file_dir = ""  # 文件路径
         self.start_point = -1  # 文件第一个起始块的物理块号
-        # self.file_size = 0  # 文件大小，以字节为计
+        self.is_in_ram = 0
         self.is_occupied = 0  # 标明本FCB是否被占用；默认为0未被占用
 
 
@@ -110,7 +109,7 @@ def delete_file(filename, file_dir):
     """
     for fcb_item in FCB:
         if (fcb_item.filename is filename) and (fcb_item.file_dir is file_dir):  # 目标路径下的文件存在
-            if fcb_item.is_occupied:  # 在内存
+            if fcb_item.is_in_ram:  # 在内存
                 # print("要删除的文件在内存中")
                 return 0
             else:  # 存在且不在内存

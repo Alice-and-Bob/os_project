@@ -112,6 +112,11 @@ def data_delete(file_dir_i, filename_i):
             item.delete()
             break
 
+    # DONE:更新目录文件内容
+    for item in dir.FCB[file_dir]:
+        if item is filename:
+            dir.FCB[file_dir].remove(filename)
+
     # DONE：回收磁盘空间,初始化数据到disk.image
     # 按偏移量写文件到disk.image
     with open("disk.image", mode="ab+", encoding='utf-8') as disk_image:
@@ -199,6 +204,7 @@ class ExecThread(threading.Thread):
         for item in dir.FCB:
             if (item.file_dir is self.file_dir) and (item.filename is self.filename):
                 point = item.start_point()
+                item.is_in_ram = 1
                 break
 
         data = []
